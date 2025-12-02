@@ -1,10 +1,10 @@
 #!/bin/python
 
 """
-Regrids CMIP data from a lat-lon grid to the BISICLES 8km (768 x 768) South Polar
+Regrids CMIP data from a lat-lon grid to the ISMIP 8km (761 x 761) South Polar
 stereographic grid using pyremap.
 
-Usage: python regrid_CMIP_to_bisicles.py <input_file> <output_file> [--method <method>] [--annual]
+Usage: python regrid_CMIP_to_ISMIP.py <input_file> <output_file> [--method <method>] [--annual]
 
 --- Options ---
 method : Regridding method to use, bilinear or conserve (default: bilinear)
@@ -23,9 +23,6 @@ from pathlib import Path
 from pyremap import LatLonGridDescriptor, Remapper
 from pyremap.polar import get_polar_descriptor_from_file
 
-# local imports
-from bisicles_defaults import GRID_8KM
-
 # ignore warnings of multiple fill values when reading netcdfs
 import warnings
 from xarray import SerializationWarning
@@ -33,19 +30,18 @@ warnings.filterwarnings("ignore", category=SerializationWarning)
 
 
 DATA_HOME = Path(os.environ.get('DATA_HOME', '~/data/')) # mapping files get saved here
-BISICLES_FILE = Path("/Users/jonniebarnsley/code/phd/local/data/bisicles_grid_pole_centered.nc")
+ISMIP_FILE = Path("ISMIP6_grid.nc")
 
 class Regridder:
     """
-    Regridder class to handle regridding of CMIP data onto the BISICLES grid.
+    Regridder class to handle regridding of CMIP data onto the ISMIP grid.
     
     Regridding requires a number of steps:
     
      1. Create a temporary file with a cyclic point / pole coordinate added.
      2. Regrid temporary file onto a South polar stereographic grid.
-     3. Relabel the coordinates to match the BISICLES setup.
-     4. Save the regridded dataset to a specified output file.
-     5. Clean up the temporary and log files created during the process.
+     3. Save the regridded dataset to a specified output file.
+     4. Clean up the temporary and log files created during the process.
 
     THe regridder class handles all the above whilst saving useful attributes for use across
     functions - for example, a list of temporary files.
@@ -69,9 +65,9 @@ class Regridder:
         """Context manager exit - clean up temporary / log files"""
         self.clean_up()
 
-    def regrid_CMIP_to_bisicles(self, infile: Path) -> Dataset:
+    def regrid_CMIP_to_ISMIP(self, infile: Path) -> Dataset:
         """Regrids any 2-D CMIP data on a lat-lon grid and return a dataset on the 
-        BISICLES 8km-resolution 768x768 South Polar Steregraphic grid"""
+        ISMIP 8km-resolution 761x761 South Polar Steregraphic grid"""
         
         # The easiest way to use pyremap is to have two netcdfs that are on the source
         # and destination grids. However, some CMIP data requires adding a cyclic point
@@ -79,16 +75,12 @@ class Regridder:
         # an intermediate file with these changes made for pyremap to work from.
         tmp_filepath = self._make_tmp_file(infile)
 
-        # Now regrid onto a 768x768 8km grid with the origin on the South pole.
+        # Now regrid onto the ISMIP grid.
         ds = self._regrid(tmp_filepath)
-        
-        # Redefine grid coordinates such that the origin is in the bottom left corner.
-        xs, ys = GRID_8KM
-        ds = ds.assign_coords(x=xs, y=ys)
         
         # Update attributes
         ds.attrs.update({
-            "grid": "BISICLES 8km (768 x 768) South Polar Stereographic",
+            "grid": "ISMIP 8km (761 x 761) South Polar Stereographic",
             "grid_label": "8km",
             "nominal_resolution": "8km"
         })
@@ -125,10 +117,9 @@ class Regridder:
         return tmp_filepath
 
     def _regrid(self, file: Path) -> Dataset:
-        """Regrid a lat-lon file and return a dataset on a 768x768 8km South polar 
-        stereographic grid with the origin centered over the South pole."""
+        """Regrid a lat-lon file and return a dataset on the ISMIP 8km 761x761 grid."""
 
-        remapper = self._build_remapper(file, BISICLES_FILE)
+        remapper = self._build_remapper(file, ISMIP_FILE)
         dsIn = xr.open_dataset(file)
         # Fill NaNs in mrro before regridding
         if "mrro" in dsIn.data_vars:
@@ -192,7 +183,7 @@ def get_mapping_filepath(infile: Path) -> Path:
     with xr.open_dataset(infile) as ds:
         model = ds.attrs['source_id']
         var = ds.attrs['variable_id']
-    return mapping_dir / f"map_{model}_{var}_to_bisicles.nc"
+    return mapping_dir / f"map_{model}_{var}_to_ismip.nc"
 
 def get_tmp_filepath(infile: Path) -> Path:
     """Generates a temporary file path in the same directory as the input for
@@ -243,7 +234,7 @@ def annual_means(ds: Dataset) -> Dataset:
 def build_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("infile", type=Path, help="path to CMIP file for regridding")
-    parser.add_argument("outfile", type=Path, help="path to output file on BISICLES grid")
+    parser.add_argument("outfile", type=Path, help="path to output file on ISMIP grid")
     parser.add_argument("--method", type=str, default="bilinear", 
                         help="regridding method to use (default: bilinear)")
     parser.add_argument("--annual", action="store_true", 
@@ -257,7 +248,7 @@ def main():
         print(f"{args.outfile} already exists.")
         return
     with Regridder(method=args.method, annual_mean=args.annual) as rg:
-        ds = rg.regrid_CMIP_to_bisicles(args.infile)
+        ds = rg.regrid_CMIP_to_ISMIP(args.infile)
         rg.save(ds, args.outfile)
 
 if __name__ == "__main__":

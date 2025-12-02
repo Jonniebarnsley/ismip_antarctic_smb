@@ -1,7 +1,7 @@
 """
 Takes surface mass balance data created by preprocess_smb.py and computes the SMB anomaly
 relative to the 1995-2014 climatology. Saves the SMB anomaly to netCDF files, one per year.
-Units are converted from kg m-2 s-1 to m a-1 ice equivalent, ready for input to BISICLES.
+Units are converted from kg m-2 s-1 to m a-1 ice equivalent.
 
 Usage: python compute_smb_anomaly.py <historical_file> <scenario_file> <anomaly_dir>
 
@@ -19,8 +19,8 @@ import xarray as xr
 from xarray import DataArray, Dataset
 from pathlib import Path
 
-# Local imports
-from bisicles_defaults import ICE_DENSITY
+# Constants
+ICE_DENSITY = 917.0  # kg m-3
 
 # Compute SMB anomaly relative to climatology over these years
 CLIM_START = 1995
