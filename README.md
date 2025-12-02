@@ -1,4 +1,4 @@
-# Preprocess ISMIP Surface Mass Balance
+# ISMIP Antarctic Surface Mass Balance
 
 This repository contains scripts for processing CMIP climate model data to generate surface mass balance (SMB) anomalies for Antarctic ice sheet simulations. The scripts regrid CMIP data onto the ISMIP 8km South Polar Stereographic grid and compute SMB anomalies relative to the 1995-2014 climatology.
 
@@ -14,7 +14,7 @@ The workflow consists of two main steps:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/Jonniebarnsley/preprocess_ismip_smb.git
+git clone https://github.com/Jonniebarnsley/ismip_antarctic_smb.git
 cd preprocess_ismip_smb
 ```
 
