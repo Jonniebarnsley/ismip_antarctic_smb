@@ -9,7 +9,14 @@ The workflow consists of two main steps:
 1. **`preprocess_smb.py`**: Processes raw CMIP data files to compute SMB on the ISMIP 8km grid
 2. **`compute_smb_anomaly.py`**: Computes SMB anomalies relative to the 1995-2014 climatology
 
-## Setup
+## Getting Started
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/Jonniebarnsley/preprocess_ismip_smb.git
+cd preprocess_ismip_smb
+```
 
 ### Environment
 
@@ -17,7 +24,7 @@ Create the conda environment using the provided `environment.yml` file:
 
 ```bash
 conda env create -f environment.yml
-conda activate smb
+conda activate ismip_antarctic_smb
 ```
 
 ### Required Files
